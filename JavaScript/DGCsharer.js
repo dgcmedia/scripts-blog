@@ -3,7 +3,7 @@
 DGCmedia Social Sharer V 1.0
 http://www.dgcmedia.es
 
-Clase JS para compartir de forma sencilla páginas (e imágenes) en las redes Facebook, Twitter y Pinterest
+Clase JS para compartir de forma sencilla pï¿½ginas (e imï¿½genes) en las redes Facebook, Twitter y Pinterest
 
 */
 var shareDGC = function(customConfig){
@@ -12,16 +12,18 @@ var shareDGC = function(customConfig){
 			likesId : '.dgcLikes', // Identificador para el elemento en el que mostrar los shares en Facebook
 			tweetsId : '.dgcTweets', // Identificador para el elemento en el que mostrar los tweet en Twitter
 			pingsId : '.dgcPings', // Identificador para el elemento en el que mostrar los pings en Pinterest
+			plusId : '.dgcPlus', // Identificador para el elemento en el que mostrar los pings en G+
 			pingImg : '#dgcPing, .dgcPing', // Identificador para compartir en pinterest
 			shareFcbId : '.dgcFcbS', // Identificador para compartir en Facebook
 			shareTwtId : '.dgcTwtS', // Identificador para compartir en Twitter
 			sharePinId : '.dgcPinS', // Identificador para compartir en Pinterest
-			dataUrl: 'su', // Identificador atributo data-XXXX para indicar una url específica
-			dataTitle: 'st', // Identificador atributo data-XXXX para indicar un texto específico
-			dataMedia: 'sm', // Identificador atributo data-XXXX para indicar una imagen específica
+			sharePlusId : '.dgcPlusS', // Identificador para compartir en Pinterest
+			dataUrl: 'su', // Identificador atributo data-XXXX para indicar una url especï¿½fica
+			dataTitle: 'st', // Identificador atributo data-XXXX para indicar un texto especï¿½fico
+			dataMedia: 'sm', // Identificador atributo data-XXXX para indicar una imagen especï¿½fica
 			title : encodeURIComponent(document.title.replace('#!','').replace('#','')), // titulo (si no se indica)
 			url : document.URL, // uri (si no se indica)
-			runAuto : true // se lanza o no automáticamente
+			runAuto : true // se lanza o no automï¿½ticamente
 		},
 		likes : function(element){
 			var config=this.config;
@@ -70,6 +72,37 @@ var shareDGC = function(customConfig){
 				}
 			});
 		},
+		pluses : function(element){
+			var config=this.config;
+			var uri=(element.data(config.dataUrl))?element.data(config.dataUrl):config.url;
+			var API_KEY = 'e733e3bd4fde09429c6d7f4fcf50ba999e53a4a8';
+			jQuery.ajax({
+				url: 'https://clients6.google.com/rpc?key='+API_KEY + 'callback=?',
+				type: 'POST',
+				data : {
+					 "method":"pos.plusones.get",
+					    "id":"p",
+					    "params":{
+					        "nolog":true,
+					        "id": uri,
+					        "source":"widget",
+					        "userId":"@viewer",
+					        "groupId":"@self"
+					        },
+					    "jsonrpc":"2.0",
+					    "key": "p",
+					    "apiVersion":"v1"
+				},
+				crossDomain : true,
+				dataType : 'jsonp'
+			}).done(function(data) {
+				if(typeof data[0] == 'undefined' || typeof data[0].result.metadata.globalCounts.count == 'undefined'){
+					element.html( 0 );
+				}else{
+					element.html( parseInt(data[0].result.metadata.globalCounts.count) );
+				}
+			});
+		},
 		facebookShare : function(element){
 			element=jQuery(element);
 			var config=this.config;
@@ -94,8 +127,16 @@ var shareDGC = function(customConfig){
 			window.open( 'http://pinterest.com/pin/create/button/?url='+uri+'&media='+media+'&description='+title, "pinterestWindow", "height=640,width=660,resizable=0,toolbar=0,menubar=0,status=0,location=0,scrollbars=0" );
 			return false;
 		},
+		plusShare : function(element){
+			element=jQuery(element);
+			var config=this.config;
+			var uri=(element.data(config.dataUrl))?element.data(config.dataUrl):config.url;
+			window.open( 'https://plus.google.com/share?url='+uri, "G+Window", "height=640,width=660,resizable=0,toolbar=0,menubar=0,status=0,location=0,scrollbars=0" );
+			return false;
+		},
 		
-		// Lanza automáticamente el plugin
+		
+		// Lanza automï¿½ticamente el plugin
 		run : function(){
 			var config = this.config;
 			var $this=this;
@@ -109,6 +150,9 @@ var shareDGC = function(customConfig){
 				jQuery($this.config.pingsId).each(function(index,element){
 					$this.pings(jQuery(element));
 				});
+				jQuery($this.config.plusId).each(function(index,element){
+					$this.pluses(jQuery(element));
+				});
 				jQuery(config.shareFcbId).on('click',function(){
 					$this.facebookShare(this);
 				});
@@ -117,6 +161,9 @@ var shareDGC = function(customConfig){
 				});
 				jQuery(config.sharePinId).on('click',function(){
 					$this.pinterestShare(this);
+				});
+				jQuery(config.sharePlusId).on('click',function(){
+					$this.plusShare(this);
 				});
 			});
 		}
